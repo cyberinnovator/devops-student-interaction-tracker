@@ -152,7 +152,7 @@ def find_best_match(embedding, known_embeddings):
     Find the best matching speaker from known embeddings using cosine similarity.
     Args:
         embedding (np.ndarray): The embedding to match.
-        known_embeddings (List[Tuple]): List of (id, embedding_path, time) tuples.
+        known_embeddings (List[dict]): List of dictionaries with 'roll_no'/'teacher_id' and 'embedding_path' keys.
     Returns:
         Tuple[str, float]: (best_match_id, similarity_score)
     """
@@ -161,14 +161,22 @@ def find_best_match(embedding, known_embeddings):
             return None, 0.0
         
         similarities = []
-        for speaker_id, emb_path, _ in known_embeddings:
-            known_emb = load_embedding(emb_path)
-            similarity = cosine_similarity(embedding, known_emb)
-            similarities.append((speaker_id, similarity))
+        for speaker_doc in known_embeddings:
+            # Handle both student and teacher documents
+            speaker_id = speaker_doc.get('roll_no') or speaker_doc.get('teacher_id')
+            emb_path = speaker_doc.get('embedding_path')
+            
+            if speaker_id and emb_path:
+                known_emb = load_embedding(emb_path)
+                similarity = cosine_similarity(embedding, known_emb)
+                similarities.append((speaker_id, similarity))
         
         # Find the best match
-        best_match = max(similarities, key=lambda x: x[1])
-        return best_match[0], best_match[1]
+        if similarities:
+            best_match = max(similarities, key=lambda x: x[1])
+            return best_match[0], best_match[1]
+        else:
+            return None, 0.0
     except Exception as e:
         logger.error(f"Error finding best match: {e}")
         return None, 0.0

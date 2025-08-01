@@ -41,6 +41,10 @@ audio_chunk*.wav
 *.db
 *.sqlite
 *.sqlite3
+student_voice_track.db
+
+# Data files (keep locally but don't commit)
+
 
 # Embeddings
 embeddings/*.npy
@@ -76,6 +80,10 @@ tmp/
 # Output files
 output.rttm
 *.rttm
+
+# Temporary audio files
+audio_chunk.wav
+temp_*.wav
 
 # Hugging Face cache
 .cache/

@@ -102,9 +102,11 @@ def register_teachers():
 def print_leaderboard():
     try:
         logger.info("📊 Generating leaderboard...")
-        students = get_all_student_embeddings()  # [(roll_no, embedding_path, time), ...]
+        students = get_all_student_embeddings()  # [{"roll_no": ..., "embedding_path": ..., "time": ...}, ...]
         leaderboard = []
-        for roll_no, _, total_time in students:
+        for student in students:
+            roll_no = student['roll_no']
+            total_time = student.get('time', 0)
             points = math.floor(total_time / 5.0)
             leaderboard.append((roll_no, total_time, points))
         leaderboard.sort(key=lambda x: x[2], reverse=True)  # Sort by points descending
@@ -146,10 +148,11 @@ def record_audio_chunk(duration=10, sample_rate=16000):
 def get_leaderboard():
     """Get the participation leaderboard."""
     try:
-        with sqlite3.connect('student_voice_track.db') as conn:
-            cursor = conn.cursor()
-            cursor.execute('SELECT roll_no, time FROM students ORDER BY time DESC')
-            return cursor.fetchall()
+        from db import get_all_student_embeddings
+        students = get_all_student_embeddings()
+        # Sort by time descending
+        students.sort(key=lambda x: x.get('time', 0), reverse=True)
+        return [(student['roll_no'], student.get('time', 0)) for student in students]
     except Exception as e:
         logger.error(f"Error getting leaderboard: {e}")
         return []

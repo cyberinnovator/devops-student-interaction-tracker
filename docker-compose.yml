@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  db:
+    image: mongo:lts
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: user
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: studentdb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+    restart: unless-stopped
+
+  app:
+    build: .
+    depends_on:
+      - db
+    environment:
+      MONGO_URL: mongodb://user:password@db:27017/studentdb?authSource=admin
+      DB_NAME: studentdb
+    # Uncomment the following if your app exposes a port (e.g., 8000)
+    # ports:
+    #   - "8000:8000"
+    restart: unless-stopped
+
+volumes:
+  mongodata: 
