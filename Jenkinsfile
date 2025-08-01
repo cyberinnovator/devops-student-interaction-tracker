@@ -9,7 +9,7 @@ pipeline {
         DOCKER_VERSIONED = "${DOCKER_IMAGE}:${DOCKER_TAG}"
         
         // Credentials (configure these in Jenkins)
-        DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
+        DOCKER_HUB_CREDENTIALS = credentials('c12afb4f-2011-4cdb-9c37-05fd7c4bf361')
         
         // Application configuration (same machine as Jenkins)
         EC2_APP_DIR = '/home/ubuntu/student-interaction-tracker'
