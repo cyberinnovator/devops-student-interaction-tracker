@@ -68,16 +68,15 @@ pipeline {
         stage('Deploy to EC2') {
             steps {
                 echo '🚀 Deploying to EC2...'
-                script {
-                    sh '''
-                        echo 'Pulling latest image...'
-                        docker pull ${DOCKER_LATEST}
-                        
-                        echo 'Creating application directory...'
-                        mkdir -p ${EC2_APP_DIR}
-                        
-                        echo 'Creating docker-compose.yml...'
-                        cat > ${EC2_APP_DIR}/docker-compose.yml << 'EOF'
+                sh '''
+                    echo 'Pulling latest image...'
+                    docker pull ${DOCKER_LATEST}
+                    
+                    echo 'Creating application directory...'
+                    mkdir -p ${EC2_APP_DIR}
+                    
+                    echo 'Creating docker-compose.yml...'
+                    cat > ${EC2_APP_DIR}/docker-compose.yml << 'EOF'
 version: '3.8'
 services:
   db:
@@ -104,51 +103,48 @@ services:
 volumes:
   mongodata:
 EOF
-                        
-                        echo 'Stopping existing containers...'
-                        cd ${EC2_APP_DIR}
-                        docker-compose down || true
-                        
-                        echo 'Starting new containers...'
-                        docker-compose up -d
-                        
-                        echo 'Waiting for services to be ready...'
-                        sleep 30
-                        
-                        echo 'Checking container status...'
-                        docker-compose ps
-                        
-                        echo 'Deployment completed successfully!'
-                    '''
-                }
+                    
+                    echo 'Stopping existing containers...'
+                    cd ${EC2_APP_DIR}
+                    docker-compose down || true
+                    
+                    echo 'Starting new containers...'
+                    docker-compose up -d
+                    
+                    echo 'Waiting for services to be ready...'
+                    sleep 30
+                    
+                    echo 'Checking container status...'
+                    docker-compose ps
+                    
+                    echo 'Deployment completed successfully!'
+                '''
             }
         }
         
         stage('Health Check') {
             steps {
                 echo '🏥 Performing health check...'
-                script {
-                    sh '''
-                        cd ${EC2_APP_DIR}
-                        
-                        echo 'Checking if containers are running...'
-                        if docker-compose ps | grep -q 'Up'; then
-                            echo '✅ Containers are running successfully'
-                        else
-                            echo '❌ Containers are not running properly'
-                            docker-compose logs
-                            exit 1
-                        fi
-                        
-                        echo 'Checking MongoDB connection...'
-                        docker-compose exec -T db mongosh --eval 'db.runCommand({ping: 1})' || {
-                            echo '❌ MongoDB health check failed'
-                            exit 1
-                        }
-                        
-                        echo '✅ Health check passed'
-                    '''
-                }
+                sh '''
+                    cd ${EC2_APP_DIR}
+                    
+                    echo 'Checking if containers are running...'
+                    if docker-compose ps | grep -q 'Up'; then
+                        echo '✅ Containers are running successfully'
+                    else
+                        echo '❌ Containers are not running properly'
+                        docker-compose logs
+                        exit 1
+                    fi
+                    
+                    echo 'Checking MongoDB connection...'
+                    docker-compose exec -T db mongosh --eval 'db.runCommand({ping: 1})' || {
+                        echo '❌ MongoDB health check failed'
+                        exit 1
+                    }
+                    
+                    echo '✅ Health check passed'
+                '''
             }
         }
     }
