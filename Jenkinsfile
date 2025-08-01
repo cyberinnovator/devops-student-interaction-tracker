@@ -4,7 +4,7 @@ pipeline {
     environment {
         IMAGE_NAME = 'vedantpatil/devops-student-tracker'
         IMAGE_TAG = 'latest'
-        DOCKERHUB_CREDENTIALS = credentials('c12afb4f-2011-4cdb-9c37-05fd7c4bf361') // Docker Hub credentials
+        DOCKERHUB_CREDENTIALS = credentials('c12afb4f-2011-4cdb-9c37-05fd7c4bf361')
     }
 
     stages {
@@ -14,10 +14,16 @@ pipeline {
             }
         }
 
+        stage('Debug: Print requirements.txt') {
+            steps {
+                sh 'cat requirements.txt'
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                    sh "docker build --no-cache -t ${IMAGE_NAME}:${IMAGE_TAG} ."
                 }
             }
         }
