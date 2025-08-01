@@ -1,250 +1,419 @@
-# Student Voice Tracking System in Online Meets
+# Student Interaction Tracker - DevOps Deployment
 
-A real-time audio processing system that tracks student participation in classroom discussions using speaker diarization, voice embeddings, and speech-to-text transcription. Now with MongoDB backend and Docker support!
+A complete CI/CD pipeline for deploying a student voice tracking system using Docker, Jenkins, MongoDB, and AWS EC2.
 
-## Features
+## 🚀 **Deployment Architecture**
 
-- 🎤 **Real-time Audio Recording**: Continuous 10-second audio chunks
-- 🎭 **Speaker Diarization**: Identifies different speakers using pyannote.audio
-- 🎵 **Voice Embeddings**: Extracts unique voice signatures for each speaker
-- 👥 **Speaker Recognition**: Matches speakers to known teachers and students
-- 📝 **Speech Transcription**: Converts speech to text using faster-whisper
-- 🔍 **Roll Number Extraction**: Automatically extracts student roll numbers from speech using regex and transformers
-- 🆔 **Unknown Speaker Registration**: Handles unknown speakers by transcribing, extracting roll numbers, and registering new students
-- 🏆 **Participation Leaderboard**: Tracks and ranks student participation time
-- 🔧 **Audio Preprocessing**: Noise reduction and speech enhancement for better transcription
-- 🐳 **Docker Support**: Containerized application with MongoDB
-- 📊 **MongoDB Backend**: Scalable NoSQL database for better performance
+```mermaid
+graph LR
+    A[Developer] --> B[Git Repository]
+    B --> C[Jenkins Pipeline]
+    C --> D[Docker Build]
+    D --> E[Docker Hub Registry]
+    E --> F[AWS EC2 Instance]
+    F --> G[MongoDB Container]
+    F --> H[Application Container]
+    
+    style A fill:#e1f5fe
+    style B fill:#f3e5f5
+    style C fill:#fff3e0
+    style D fill:#e8f5e8
+    style E fill:#e3f2fd
+    style F fill:#fff8e1
+    style G fill:#fce4ec
+    style H fill:#f1f8e9
+```
 
-## System Architecture
+## 🔄 **CI/CD Pipeline Flow**
+
+```mermaid
+flowchart TD
+    A[Code Push] --> B[Git Webhook]
+    B --> C[Jenkins Trigger]
+    C --> D[Checkout Code]
+    D --> E[Build Docker Image]
+    E --> F[Run Tests]
+    F --> G{Tests Pass?}
+    G -->|Yes| H[Push to Docker Hub]
+    G -->|No| I[Build Failed]
+    H --> J[Deploy to EC2]
+    J --> K[Health Check]
+    K --> L{Health OK?}
+    L -->|Yes| M[Deployment Success]
+    L -->|No| N[Rollback]
+    
+    style A fill:#e8f5e8
+    style M fill:#c8e6c9
+    style I fill:#ffcdd2
+    style N fill:#ffcdd2
+```
+
+## 🏗️ **System Architecture**
+
+```mermaid
+graph TB
+    subgraph "AWS EC2 Instance"
+        subgraph "Docker Containers"
+            A[Application Container<br/>Python 3.10]
+            B[MongoDB Container<br/>MongoDB LTS]
+        end
+        
+        C[Jenkins Server]
+        D[Docker Engine]
+    end
+    
+    subgraph "External Services"
+        E[Git Repository]
+        F[Docker Hub Registry]
+    end
+    
+    A --> B
+    C --> D
+    D --> A
+    D --> B
+    E --> C
+    F --> D
+    
+    style A fill:#e1f5fe
+    style B fill:#f3e5f5
+    style C fill:#fff3e0
+    style D fill:#e8f5e8
+    style E fill:#e3f2fd
+    style F fill:#fff8e1
+```
+
+## 🏗️ **Technology Stack**
+
+- **Containerization**: Docker & Docker Compose
+- **CI/CD**: Jenkins Pipeline
+- **Database**: MongoDB (NoSQL)
+- **Cloud**: AWS EC2
+- **Registry**: Docker Hub
+- **Language**: Python 3.10
+
+## 📋 **Prerequisites**
+
+- AWS EC2 instance (Ubuntu 22.04 LTS)
+- Jenkins server (installed on EC2)
+- Docker Hub account
+- Git repository
+
+## 🛠️ **Quick Start**
+
+### 1. **Clone and Setup**
+```bash
+git clone <your-repository-url>
+cd student-interaction-tracker
+```
+
+### 2. **Local Testing**
+```bash
+# Test Docker build
+docker build -t student-interaction-tracker .
+
+# Test with Docker Compose
+docker-compose up --build
+```
+
+### 3. **Deploy to Production**
+```bash
+# Push code to trigger Jenkins pipeline
+git add .
+git commit -m "Update application"
+git push origin main
+```
+
+## 🔧 **Jenkins Pipeline Configuration**
+
+### **Pipeline Stages:**
+```mermaid
+graph LR
+    A[Checkout] --> B[Build]
+    B --> C[Test]
+    C --> D[Push]
+    D --> E[Deploy]
+    E --> F[Health Check]
+    
+    style A fill:#e8f5e8
+    style B fill:#e3f2fd
+    style C fill:#fff3e0
+    style D fill:#f3e5f5
+    style E fill:#e1f5fe
+    style F fill:#f1f8e9
+```
+
+1. **Checkout** - Pull code from Git
+2. **Build** - Create Docker image
+3. **Test** - Run MongoDB connection tests
+4. **Push** - Upload to Docker Hub
+5. **Deploy** - Deploy to EC2
+6. **Health Check** - Verify deployment
+
+### **Jenkins Setup:**
+1. Install Jenkins on EC2
+2. Install required plugins:
+   - Docker Pipeline
+   - Git Plugin
+   - Pipeline
+   - Credentials Binding
+3. Configure credentials:
+   - Docker Hub credentials (`docker-hub-credentials`)
+4. Create pipeline job pointing to `Jenkinsfile`
+
+## 🐳 **Docker Configuration**
+
+### **Dockerfile**
+```dockerfile
+FROM python:3.10-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+CMD ["python3", "main.py"]
+```
+
+### **Docker Compose**
+```yaml
+version: '3.8'
+services:
+  db:
+    image: mongo:lts
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: user
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: studentdb
+    volumes:
+      - mongodata:/data/db
+
+  app:
+    image: dockerpilot17/student-interaction-tracker:latest
+    depends_on:
+      - db
+    environment:
+      MONGO_URL: mongodb://user:password@db:27017/studentdb?authSource=admin
+      DB_NAME: studentdb
+```
+
+## 📊 **Database Migration**
+
+### **From SQLite to MongoDB**
+The application has been migrated from SQLite to MongoDB for better scalability:
+
+```mermaid
+graph LR
+    A[SQLite Database] --> B[Migration Script]
+    B --> C[MongoDB Collections]
+    
+    subgraph "Data Structure"
+        D[Students Collection]
+        E[Teachers Collection]
+    end
+    
+    C --> D
+    C --> E
+    
+    style A fill:#ffcdd2
+    style B fill:#fff3e0
+    style C fill:#c8e6c9
+    style D fill:#e1f5fe
+    style E fill:#f3e5f5
+```
+
+- **Migration Script**: `migrate_to_mongodb.py`
+- **Database Operations**: `db.py` (MongoDB implementation)
+- **Test Script**: `test_mongodb.py`
+
+### **Data Structure**
+```javascript
+// Students Collection
+{
+  "roll_no": "string",
+  "embedding_path": "string", 
+  "time": "number"
+}
+
+// Teachers Collection
+{
+  "teacher_id": "string",
+  "embedding_path": "string"
+}
+```
+
+## 🔄 **Deployment Process**
+
+### **Automated Deployment**
+```mermaid
+sequenceDiagram
+    participant Dev as Developer
+    participant Git as Git Repository
+    participant Jenkins as Jenkins
+    participant Docker as Docker Hub
+    participant EC2 as AWS EC2
+    participant App as Application
+    participant DB as MongoDB
+
+    Dev->>Git: Push Code
+    Git->>Jenkins: Webhook Trigger
+    Jenkins->>Jenkins: Build Docker Image
+    Jenkins->>Docker: Push Image
+    Jenkins->>EC2: Deploy
+    EC2->>App: Start Container
+    App->>DB: Connect to MongoDB
+    Jenkins->>EC2: Health Check
+    EC2->>Jenkins: Status Report
+```
+
+1. **Code Push** triggers Jenkins pipeline
+2. **Jenkins** builds Docker image
+3. **Docker Hub** stores the image
+4. **EC2** pulls and runs the image
+5. **MongoDB** stores application data
+6. **Health checks** verify deployment
+
+### **Manual Deployment**
+```bash
+# On EC2 instance
+./deploy.sh deploy
+```
+
+## 📁 **Project Structure**
 
 ```
-Audio Recording → Speaker Diarization → Voice Embeddings → Speaker Matching → Transcription → Roll Number Extraction → MongoDB Update → Leaderboard
-```
-
-## Requirements
-
-- Python 3.8+ (for local development)
-- Docker and Docker Compose (for containerized deployment)
-- Microphone access
-- Internet connection (for model downloads)
-- See `requirements.txt` for all Python dependencies
-
-## Installation
-
-### Option 1: Docker (Recommended)
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/cyberinnovator/student_interaction_tracker.git
-   cd student_interaction_tracker
-   ```
-
-2. **Run with Docker Compose:**
-   ```bash
-   docker-compose up --build
-   ```
-
-   This will:
-   - Build the Python application container
-   - Start MongoDB container
-   - Connect the app to MongoDB
-   - Run the application
-
-3. **For background execution:**
-   ```bash
-   docker-compose up -d
-   ```
-
-4. **View logs:**
-   ```bash
-   docker-compose logs -f app
-   ```
-
-### Option 2: Local Development
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/cyberinnovator/student_interaction_tracker.git
-   cd student_interaction_tracker
-   ```
-
-2. **Create virtual environment:**
-   ```bash
-   python -m venv myenv
-   source myenv/bin/activate  # On Windows: myenv\Scripts\activate
-   ```
-
-3. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Set up MongoDB:**
-   - Install MongoDB locally or use Docker
-   - Set environment variables:
-     ```bash
-     export MONGO_URL="mongodb://localhost:27017/"
-     export DB_NAME="studentdb"
-     ```
-
-5. **Set up Hugging Face token:**
-   - Get your token from [Hugging Face](https://huggingface.co/settings/tokens)
-   - Update the token in `diarization.py` if required
-
-## Usage
-
-### Docker Usage
-
-1. **Start the system:**
-   ```bash
-   docker-compose up --build
-   ```
-
-2. **Stop the system:**
-   ```bash
-   docker-compose down
-   ```
-
-3. **Access MongoDB:**
-   ```bash
-   docker-compose exec db mongosh -u user -p password
-   ```
-
-### Local Usage
-
-1. **Start the system:**
-   ```bash
-   python main.py
-   ```
-
-2. **Register teachers first** (optional):
-   - The system will prompt you to add teacher voices
-   - Teachers are used as reference for speaker identification
-
-3. **System will automatically:**
-   - Record 10-second audio chunks
-   - Identify speakers using diarization
-   - Match speakers to known students/teachers
-   - Transcribe speech for new/unknown speakers
-   - Extract roll numbers from speech (using regex and transformers)
-   - Register new students if roll number is found
-   - Update participation leaderboard
-
-## File Structure
-
-```
-student_interaction_tracker/
-├── main.py                 # Main application entry point
-├── db.py                   # Database operations (MongoDB)
-├── diarization.py          # Speaker diarization using pyannote.audio
-├── embedding.py            # Voice embedding extraction and comparison
-├── audio_processing.py     # Audio preprocessing for better transcription
-├── unknown_speaker.py      # Unknown speaker processing and transcription
-├── rollno_extractor.py     # Roll number extraction using regex and transformers
-├── migrate_to_mongodb.py   # Migration script from SQLite to MongoDB
+student-interaction-tracker/
+├── main.py                 # Main application
+├── db.py                   # MongoDB operations
+├── embedding.py            # Voice embedding processing
+├── diarization.py          # Speaker diarization
 ├── Dockerfile              # Docker configuration
-├── docker-compose.yml      # Docker Compose configuration
-├── .dockerignore           # Docker ignore file
-├── embeddings/             # Stored voice embeddings
+├── docker-compose.yml      # Container orchestration
+├── Jenkinsfile             # CI/CD pipeline
+├── deploy.sh               # Deployment script
+├── requirements.txt        # Python dependencies
+├── test_mongodb.py         # Database tests
+├── migrate_to_mongodb.py   # Data migration
 └── README.md               # This file
 ```
 
-## Configuration
+## 🔍 **Monitoring & Maintenance**
 
-### Environment Variables
-
-- `MONGO_URL`: MongoDB connection string (default: `mongodb://localhost:27017/`)
-- `DB_NAME`: Database name (default: `studentdb`)
-
-### Audio Processing
-- **Preprocessing**: Gentle noise reduction and speech enhancement
-- **Transcription**: CPU-optimized faster-whisper with tiny model
-- **Language**: English (configurable)
-
-### Speaker Detection
-- **Diarization**: pyannote.audio 3.1
-- **Embeddings**: Resemblyzer voice encoder
-- **Similarity Threshold**: 0.6 (configurable)
-
-### Database
-- **Storage**: MongoDB (NoSQL database)
-- **Collections**: students, teachers
-- **Data**: Roll numbers, embedding paths, participation time
-- **Indexes**: Automatic indexing on roll_no and teacher_id for performance
-
-## Data Migration
-
-If you have existing data in SQLite, you can migrate it to MongoDB:
-
+### **Health Checks**
 ```bash
-# Run the migration script
-python migrate_to_mongodb.py
+# Check container status
+docker-compose ps
+
+# View application logs
+docker-compose logs -f app
+
+# Check database connection
+docker-compose exec db mongosh --eval "db.runCommand({ping: 1})"
 ```
 
-This will:
-- Connect to your existing SQLite database
-- Transfer all students and teachers to MongoDB
-- Preserve embedding file paths and participation times
+### **Backup & Recovery**
+```bash
+# Create backup
+./deploy.sh backup
 
-## How It Works
+# Rollback deployment
+./deploy.sh rollback
+```
 
-1. **Audio Recording**: Records 10-second chunks continuously
-2. **Diarization**: Separates audio into speaker segments
-3. **Embedding Extraction**: Creates voice signatures for each speaker
-4. **Speaker Matching**: Compares embeddings with known speakers
-5. **Transcription**: Converts speech to text for unknown speakers
-6. **Roll Number Extraction**: Uses regex and transformers to find roll numbers
-7. **MongoDB Update**: Saves new students and updates participation time
-8. **Leaderboard**: Displays participation rankings
+## 🚨 **Troubleshooting**
 
-## Roll Number Patterns
+### **Common Issues**
 
-The system recognizes these patterns in speech:
-- "roll no. is 123"
-- "roll number is 123"
-- "role number is 123" (common transcription)
-- "my roll no. is 123"
-- "my role number is 123"
-- "i am 123" (fallback)
+1. **Docker Permission Issues**
+   ```bash
+   sudo usermod -aG docker jenkins
+   sudo systemctl restart jenkins
+   ```
 
-## Troubleshooting
+2. **MongoDB Connection Issues**
+   ```bash
+   docker-compose logs db
+   docker-compose restart db
+   ```
 
-### Common Issues
+3. **Jenkins Build Failures**
+   - Check Jenkins console output
+   - Verify Docker Hub credentials
+   - Ensure Git repository is accessible
 
-1. **No speakers detected**: Check microphone permissions and audio levels
-2. **Transcription errors**: Ensure clear speech and minimal background noise
-3. **Roll number not extracted**: Speak clearly and use supported patterns
-4. **Model download issues**: Check internet connection and Hugging Face token
-5. **MongoDB connection issues**: Check if MongoDB container is running
+### **Logs Location**
+- **Application**: `docker-compose logs app`
+- **Database**: `docker-compose logs db`
+- **Jenkins**: `/var/log/jenkins/jenkins.log`
 
-### Docker Issues
+## 🔐 **Security Considerations**
 
-1. **Container won't start**: Check Docker and Docker Compose installation
-2. **MongoDB connection failed**: Ensure MongoDB container is healthy
-3. **Permission issues**: Run with appropriate user permissions
+- MongoDB authentication enabled
+- Docker containers run with limited privileges
+- Environment variables for sensitive data
+- Regular security updates
 
-### Performance Tips
+## 📈 **Scaling Options**
 
-- Use a quiet environment for better transcription
-- Speak clearly when providing roll numbers
-- Ensure stable internet for model downloads
-- Close other audio applications
-- Use Docker for consistent environment
+### **Horizontal Scaling**
+```mermaid
+graph TB
+    subgraph "Load Balancer"
+        LB[Application Load Balancer]
+    end
+    
+    subgraph "EC2 Instances"
+        EC1[EC2 Instance 1]
+        EC2[EC2 Instance 2]
+        EC3[EC2 Instance 3]
+    end
+    
+    subgraph "Database"
+        DB1[MongoDB Primary]
+        DB2[MongoDB Secondary]
+        DB3[MongoDB Secondary]
+    end
+    
+    LB --> EC1
+    LB --> EC2
+    LB --> EC3
+    EC1 --> DB1
+    EC2 --> DB1
+    EC3 --> DB1
+    DB1 --> DB2
+    DB1 --> DB3
+    
+    style LB fill:#e3f2fd
+    style EC1 fill:#e8f5e8
+    style EC2 fill:#e8f5e8
+    style EC3 fill:#e8f5e8
+    style DB1 fill:#f3e5f5
+    style DB2 fill:#f3e5f5
+    style DB3 fill:#f3e5f5
+```
 
-## Contributing
+- Multiple EC2 instances behind load balancer
+- MongoDB replica set for high availability
+- Docker Swarm or Kubernetes for orchestration
+
+### **Vertical Scaling**
+- Larger EC2 instance types
+- MongoDB Atlas for managed database
+- Enhanced monitoring and alerting
+
+## 🤝 **Contributing**
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+2. Create feature branch
+3. Make changes
+4. Test locally with Docker
+5. Push and create pull request
 
-## Acknowledgments
+## 📞 **Support**
 
-- [pyannote.audio](https://github.com/pyannote/pyannote-audio) for speaker diarization
-- [faster-whisper](https://github.com/guillaumekln/faster-whisper) for speech transcription
-- [Resemblyzer](https://github.com/resemble-ai/Resemblyzer) for voice embeddings
-- [librosa](https://librosa.org/) for audio processing 
-- [transformers](https://github.com/huggingface/transformers) for roll number extraction
-- [MongoDB](https://www.mongodb.com/) for the database backend
+- **Repository**: [GitHub Repository URL]
+- **Docker Hub**: [dockerpilot17/student-interaction-tracker]
+- **Issues**: Create GitHub issue for bugs/features
+
+---
+
+**Deployed By**: [Your Name]  
+**Last Updated**: [Date]  
+**Version**: 1.0
